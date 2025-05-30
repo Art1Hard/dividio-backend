@@ -7,7 +7,7 @@ import { Request } from "express";
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
-	@UseGuards(new JwtAuthGuard())
+	@UseGuards(JwtAuthGuard)
 	@Get()
 	getMe(@Req() req: Request) {
 		return req.user;
