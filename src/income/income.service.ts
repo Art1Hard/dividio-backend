@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { IncomeDto } from "./dto/income.dto";
 
@@ -24,6 +24,35 @@ export class IncomeService {
 		});
 
 		return data;
+	}
+
+	async update(id: string, dto: IncomeDto, userId: string) {
+		const existing = await this.prisma.income.findUnique({ where: { id } });
+
+		if (!existing) throw new BadRequestException("Запись не найдена");
+
+		if (existing.userId !== userId)
+			throw new BadRequestException("Доступ запрещён!");
+
+		return this.prisma.income.update({
+			where: { id },
+			data: dto,
+			select: { id: true, title: true, amount: true },
+		});
+	}
+
+	async delete(id: string, userId: string) {
+		const existing = await this.prisma.income.findUnique({ where: { id } });
+
+		if (!existing) throw new BadRequestException("Запись не найдена");
+
+		if (existing.userId !== userId)
+			throw new BadRequestException("Доступ запрещён!");
+
+		return this.prisma.income.delete({
+			where: { id },
+			select: { id: true, title: true, amount: true },
+		});
 	}
 
 	async getTotal(userId: string) {
