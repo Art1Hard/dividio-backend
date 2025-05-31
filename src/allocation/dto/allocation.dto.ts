@@ -10,8 +10,3 @@ export class AllocationDto {
 	@IsInt()
 	percentage: number;
 }
-
-export class AllocationDtoIncludesId extends AllocationDto {
-	@IsString()
-	id: string;
-}

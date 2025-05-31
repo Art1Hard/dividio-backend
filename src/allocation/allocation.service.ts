@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
-import { AllocationDto, AllocationDtoIncludesId } from "./dto/allocation.dto";
+import { AllocationDto } from "./dto/allocation.dto";
 import { IncomeService } from "src/income/income.service";
 import { Allocation } from "@prisma/client";
 import { calculateOccupiedPercentage } from "src/services/allocation.service";
@@ -73,8 +73,8 @@ export class AllocationService {
 		};
 	}
 
-	async update(dto: AllocationDtoIncludesId, userId: string) {
-		const existing = await this.getUnique(dto.id);
+	async update(id: string, dto: AllocationDto, userId: string) {
+		const existing = await this.getUnique(id);
 
 		if (!existing) throw new BadRequestException("Запись не найдена");
 
@@ -84,7 +84,7 @@ export class AllocationService {
 		const occupiedPercentage = await calculateOccupiedPercentage(
 			this.prisma,
 			userId,
-			dto.id
+			id
 		);
 
 		const totalPercentage = getSumPercentage(
@@ -98,7 +98,7 @@ export class AllocationService {
 		const totalAmount = await this.incomeService.getTotal(userId);
 
 		const data = await this.prisma.allocation.update({
-			where: { id: dto.id },
+			where: { id: id },
 			data: {
 				title: dto.title,
 				percentage: dto.percentage,
