@@ -1,7 +1,15 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
-import { AllocationDto, UpdateAllocationDto } from "./dto/allocation.dto";
+import { AllocationDto, AllocationDtoIncludesId } from "./dto/allocation.dto";
 import { IncomeService } from "src/income/income.service";
+import { Allocation } from "@prisma/client";
+import { calculateOccupiedPercentage } from "src/services/allocation.service";
+import {
+	calculateLocalPercentage,
+	getSumPercentage,
+	isOverflowPercentage,
+	throwOverflowException,
+} from "src/utils/percentage.utils";
 
 @Injectable()
 export class AllocationService {
@@ -24,44 +32,48 @@ export class AllocationService {
 
 		return allocations.map((allocation) => ({
 			...allocation,
-			amount: Math.round((allocation.percentage / 100) * totalAmount),
+			amount: calculateLocalPercentage(allocation.percentage, totalAmount),
 		}));
 	}
 
-	async getUnique(id: string) {
+	private async getUnique(id: string): Promise<Allocation | null> {
 		return await this.prisma.allocation.findUnique({
 			where: { id },
 		});
 	}
 
 	async create(dto: AllocationDto, userId: string) {
+		const occupiedPercentage = await calculateOccupiedPercentage(
+			this.prisma,
+			userId
+		);
+
+		const totalPercentage = getSumPercentage(
+			occupiedPercentage,
+			dto.percentage
+		);
+
+		if (isOverflowPercentage(totalPercentage))
+			throwOverflowException(totalPercentage);
+
 		const totalAmount = await this.incomeService.getTotal(userId);
-		const calculatedAmount = Math.round((dto.percentage / 100) * totalAmount);
 
-		const occupedPercentage = await this.calculateOccupiedPercentage(userId);
-
-		// 3. Проверка: не превышает ли новая сумма 100%
-		const newTotal = occupedPercentage + dto.percentage;
-		if (newTotal > 100) {
-			throw new BadRequestException(
-				`Превышен лимит: текущая сумма ${occupedPercentage}%, добавляешь ${dto.percentage}%, получится ${newTotal}%. Лимит — 100%.`
-			);
-		}
-
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { userId: _, ...data } = await this.prisma.allocation.create({
+		const data = await this.prisma.allocation.create({
 			data: {
 				title: dto.title,
 				percentage: dto.percentage,
 				userId: userId,
-				amount: calculatedAmount,
 			},
+			select: { id: true, title: true, percentage: true },
 		});
 
-		return data;
+		return {
+			...data,
+			amount: calculateLocalPercentage(dto.percentage, totalAmount),
+		};
 	}
 
-	async update(dto: UpdateAllocationDto, userId: string) {
+	async update(dto: AllocationDtoIncludesId, userId: string) {
 		const existing = await this.getUnique(dto.id);
 
 		if (!existing) throw new BadRequestException("Запись не найдена");
@@ -69,61 +81,57 @@ export class AllocationService {
 		if (existing.userId !== userId)
 			throw new BadRequestException("Доступ запрещён!");
 
-		const othersPercentage = await this.calculateOccupiedPercentage(userId, {
-			excludeId: dto.id,
-		});
+		const occupiedPercentage = await calculateOccupiedPercentage(
+			this.prisma,
+			userId,
+			dto.id
+		);
 
-		const sumTotal = othersPercentage + dto.percentage;
+		const totalPercentage = getSumPercentage(
+			occupiedPercentage,
+			dto.percentage
+		);
 
-		if (sumTotal > 100) {
-			throw new BadRequestException(
-				`Превышен лимит: у других ${othersPercentage}%, ты пытаешься добавить ${dto.percentage}%, получится ${sumTotal}%. Лимит — 100%.`
-			);
-		}
+		if (isOverflowPercentage(totalPercentage))
+			throwOverflowException(totalPercentage);
 
 		const totalAmount = await this.incomeService.getTotal(userId);
 
-		const calculatedAmount = Math.round((dto.percentage / 100) * totalAmount);
-
-		return this.prisma.allocation.update({
+		const data = await this.prisma.allocation.update({
 			where: { id: dto.id },
 			data: {
 				title: dto.title,
 				percentage: dto.percentage,
-				amount: calculatedAmount,
 			},
+			select: { id: true, title: true, percentage: true },
+		});
+
+		return {
+			...data,
+			amount: calculateLocalPercentage(dto.percentage, totalAmount),
+		};
+	}
+
+	async remove(id: string, userId: string) {
+		const existing = await this.getUnique(id);
+
+		if (!existing) throw new BadRequestException("Запись не найдена");
+
+		if (existing.userId !== userId)
+			throw new BadRequestException("Доступ запрещён!");
+
+		return await this.prisma.allocation.delete({
+			where: { id },
+			select: { id: true, title: true, percentage: true },
 		});
 	}
 
-	private async calculateOccupiedPercentage(
-		userId: string,
-		config?: { excludeId?: string }
-	) {
-		if (config && config.excludeId) {
-			const currentAllocations = await this.prisma.allocation.aggregate({
-				where: { userId, NOT: { id: config.excludeId } },
-				_sum: {
-					percentage: true,
-				},
-			});
-			return currentAllocations._sum.percentage ?? 0;
-		}
-
-		const currentAllocations = await this.prisma.allocation.aggregate({
-			where: { userId },
-			_sum: {
-				percentage: true,
-			},
-		});
-		return currentAllocations._sum.percentage ?? 0;
+	async getFreePercentage(userId: string): Promise<number> {
+		const occupied = await calculateOccupiedPercentage(this.prisma, userId);
+		return 100 - occupied;
 	}
 
-	async getFreePercentage(userId: string) {
-		const occuped = await this.calculateOccupiedPercentage(userId);
-		return 100 - occuped;
-	}
-
-	async getFreeAmount(userId: string) {
+	async getFreeAmount(userId: string): Promise<number> {
 		const totalAmount = await this.incomeService.getTotal(userId);
 		const freePercentage = await this.getFreePercentage(userId);
 		return Math.round((freePercentage / 100) * totalAmount);

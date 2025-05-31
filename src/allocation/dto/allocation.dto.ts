@@ -1,4 +1,4 @@
-import { IsNumber, IsString, Min } from "class-validator";
+import { IsInt, IsNumber, IsString, Max, Min } from "class-validator";
 
 export class AllocationDto {
 	@IsString()
@@ -6,10 +6,12 @@ export class AllocationDto {
 
 	@IsNumber()
 	@Min(5)
+	@Max(100)
+	@IsInt()
 	percentage: number;
 }
 
-export class UpdateAllocationDto extends AllocationDto {
+export class AllocationDtoIncludesId extends AllocationDto {
 	@IsString()
 	id: string;
 }

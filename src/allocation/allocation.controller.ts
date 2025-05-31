@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	Post,
 	Put,
@@ -12,7 +13,7 @@ import {
 import { AllocationService } from "./allocation.service";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
 import { RequestWithUser } from "src/types/request";
-import { AllocationDto, UpdateAllocationDto } from "./dto/allocation.dto";
+import { AllocationDto, AllocationDtoIncludesId } from "./dto/allocation.dto";
 
 @Controller("allocation")
 export class AllocationController {
@@ -43,9 +44,18 @@ export class AllocationController {
 	@UsePipes(new ValidationPipe())
 	@Put()
 	async updateAllocation(
-		@Body() dto: UpdateAllocationDto,
+		@Body() dto: AllocationDtoIncludesId,
 		@Req() req: RequestWithUser
 	) {
 		return this.allocationService.update(dto, req.user.id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Delete()
+	async deleteAllocation(
+		@Body() dto: AllocationDtoIncludesId,
+		@Req() req: RequestWithUser
+	) {
+		return this.allocationService.remove(dto.id, req.user.id);
 	}
 }
