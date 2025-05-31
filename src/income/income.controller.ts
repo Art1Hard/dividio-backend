@@ -20,7 +20,10 @@ export class IncomeController {
 	@UseGuards(JwtAuthGuard)
 	@Get()
 	async getIncomes(@Req() req: RequestWithUser) {
-		return this.incomeService.getMany(req.user.id);
+		const incomes = await this.incomeService.getMany(req.user.id);
+		const totalAmount = await this.incomeService.getTotal(req.user.id);
+
+		return { totalAmount, incomes };
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -28,12 +31,5 @@ export class IncomeController {
 	@Post()
 	async createIncome(@Req() req: RequestWithUser, @Body() dto: IncomeDto) {
 		return this.incomeService.create(dto, req.user.id);
-	}
-
-	@UseGuards(JwtAuthGuard)
-	@Get("total")
-	async getTotalIncomes(@Req() req: RequestWithUser) {
-		const total = await this.incomeService.getTotal(req.user.id);
-		return { totalAmount: total };
 	}
 }
