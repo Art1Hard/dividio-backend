@@ -9,11 +9,11 @@ export class UserService {
 	constructor(private prisma: PrismaService) {}
 
 	async getById(id: string): Promise<User | null> {
-		return this.prisma.user.findUnique({ where: { id } });
+		return await this.prisma.user.findUnique({ where: { id } });
 	}
 
 	async getByEmail(email: string) {
-		return this.prisma.user.findUnique({ where: { email } });
+		return await this.prisma.user.findUnique({ where: { email } });
 	}
 
 	async create(dto: AuthDto) {
@@ -23,6 +23,14 @@ export class UserService {
 				name: "",
 				password: await bcrypt.hash(dto.password, 10),
 			},
+		});
+	}
+
+	async changeName(id: string, name: string) {
+		return await this.prisma.user.update({
+			where: { id },
+			data: { name },
+			select: { id: true, email: true, name: true },
 		});
 	}
 }

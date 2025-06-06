@@ -1,7 +1,16 @@
-import { Controller, Get, Req, UseGuards } from "@nestjs/common";
+import {
+	BadRequestException,
+	Body,
+	Controller,
+	Get,
+	Put,
+	Req,
+	UseGuards,
+} from "@nestjs/common";
 import { UserService } from "./user.service";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
-import { Request } from "express";
+import { RequestWithUser } from "src/types/request";
+import { ChangeNameDto } from "./dto/user.dto";
 
 @Controller("user")
 export class UserController {
@@ -9,7 +18,20 @@ export class UserController {
 
 	@UseGuards(JwtAuthGuard)
 	@Get()
-	getMe(@Req() req: Request) {
-		return req.user;
+	async getMe(@Req() req: RequestWithUser) {
+		const data = await this.userService.getById(req.user.id);
+
+		if (!data) throw new BadRequestException("Error with get user");
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { password, ...user } = data;
+
+		return user;
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Put()
+	changeName(@Body() dto: ChangeNameDto, @Req() req: RequestWithUser) {
+		return this.userService.changeName(req.user.id, dto.name);
 	}
 }
