@@ -25,6 +25,7 @@ export class AllocationService {
 				id: true,
 				title: true,
 				percentage: true,
+				color: true,
 			},
 		});
 
@@ -54,7 +55,7 @@ export class AllocationService {
 		);
 
 		if (isOverflowPercentage(totalPercentage))
-			throwOverflowException(totalPercentage);
+			throwOverflowException(occupiedPercentage);
 
 		const totalAmount = await this.incomeService.getTotal(userId);
 
@@ -63,8 +64,9 @@ export class AllocationService {
 				title: dto.title,
 				percentage: dto.percentage,
 				userId: userId,
+				color: dto.color,
 			},
-			select: { id: true, title: true, percentage: true },
+			select: { id: true, title: true, percentage: true, color: true },
 		});
 
 		return {
@@ -102,8 +104,9 @@ export class AllocationService {
 			data: {
 				title: dto.title,
 				percentage: dto.percentage,
+				color: dto.color,
 			},
-			select: { id: true, title: true, percentage: true },
+			select: { id: true, title: true, percentage: true, color: true },
 		});
 
 		return {

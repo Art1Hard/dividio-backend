@@ -8,35 +8,36 @@ datasource db {
 }
 
 model User {
-  id    	 String  @id @default(cuid())
-  email 	 String  @unique
-  name  	 String?
-  password String
+  id    	 		String  @id @default(cuid())
+  email 	 		String  @unique
+  name  	 		String?
+  password 		String
 
-	incomes Income[]
+	incomes     Income[]
 	allocations Allocation[]
 
 	@@map("user")
 }
 
 model Income {
-	id String @id @default(cuid())
-	title String
+	id 		 String    @id @default(cuid())
+	title  String
 	amount Int
-	date DateTime?
-	user User @relation(fields: [userId], references: [id])
-	userId String @map("user_id")
+	date 	 DateTime?
+	user 	 User 		 @relation(fields: [userId], references: [id])
+	userId String    @map("user_id")
 
 	@@map("income")
 }
 
 model Allocation {
-	id String @id @default(cuid())
-	title String
+	id 				 String  @id @default(cuid())
+	title  		 String
 	percentage Int
-	required Boolean @default(false)
-	user User @relation(fields: [userId], references: [id])
-	userId String @map("user_id")
+	required 	 Boolean @default(false)
+	color 		 String  @default("gray-500")
+	user 			 User 	 @relation(fields: [userId], references: [id])
+	userId 		 String  @map("user_id")
 
 	@@map("allocation")
 }

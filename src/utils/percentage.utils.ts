@@ -11,6 +11,8 @@ export const getSumPercentage = (occupied: number, newValue: number): number =>
 export const isOverflowPercentage = (sumPercentage: number): boolean =>
 	sumPercentage > 100;
 
-export const throwOverflowException = (total: number): void => {
-	throw new BadRequestException(`Превышен лимит: ${total}%. Лимит — 100%.`);
+export const throwOverflowException = (occupied: number): void => {
+	throw new BadRequestException(
+		`Вы превысили лимит. Введите число не больше ${100 - occupied}`
+	);
 };
