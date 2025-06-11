@@ -21,6 +21,7 @@ export class AllocationService {
 	async getMany(userId: string) {
 		const allocations = await this.prisma.allocation.findMany({
 			where: { userId },
+			orderBy: { percentage: "asc" },
 			select: {
 				id: true,
 				title: true,
@@ -95,7 +96,7 @@ export class AllocationService {
 		);
 
 		if (isOverflowPercentage(totalPercentage))
-			throwOverflowException(totalPercentage);
+			throwOverflowException(occupiedPercentage);
 
 		const totalAmount = await this.incomeService.getTotal(userId);
 
