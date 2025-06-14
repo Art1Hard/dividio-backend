@@ -9,6 +9,7 @@ export class IncomeService {
 	async getMany(userId: string) {
 		return this.prisma.income.findMany({
 			where: { userId },
+			orderBy: { amount: "desc" },
 			select: { id: true, title: true, amount: true },
 		});
 	}

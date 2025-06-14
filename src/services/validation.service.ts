@@ -40,7 +40,7 @@ export class ValidationService {
 		const totalPercentage = occupiedPercentage + newPercentage;
 		if (totalPercentage > 100) {
 			throw new BadRequestException(
-				"Суммарный процент распределения не может превышать 100%"
+				`Занято ${occupiedPercentage}% из 100%. Можно добавить не более ${100 - occupiedPercentage}%`
 			);
 		}
 	}
