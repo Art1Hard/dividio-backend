@@ -1,21 +1,17 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { PrismaService } from "src/prisma.service";
+import { PrismaService } from "src/services/prisma.service";
 import { AllocationDto } from "./dto/allocation.dto";
 import { IncomeService } from "src/income/income.service";
+import { ValidationService } from "src/services/validation.service";
 import { Allocation } from "@prisma/client";
-import { calculateOccupiedPercentage } from "src/services/allocation.service";
-import {
-	calculateLocalPercentage,
-	getSumPercentage,
-	isOverflowPercentage,
-	throwOverflowException,
-} from "src/utils/percentage.utils";
+import { calculateLocalPercentage } from "src/utils/percentage.utils";
 
 @Injectable()
 export class AllocationService {
 	constructor(
 		private prisma: PrismaService,
-		private incomeService: IncomeService
+		private incomeService: IncomeService,
+		private validationService: ValidationService
 	) {}
 
 	async getMany(userId: string) {
@@ -45,18 +41,15 @@ export class AllocationService {
 	}
 
 	async create(dto: AllocationDto, userId: string) {
-		const occupiedPercentage = await calculateOccupiedPercentage(
-			this.prisma,
-			userId
-		);
+		const occupiedPercentage =
+			await this.validationService.validateOccupiedPercentage(userId);
 
-		const totalPercentage = getSumPercentage(
+		await this.validationService.validateHasIncome(userId);
+
+		this.validationService.validateTotalPercentage(
 			occupiedPercentage,
 			dto.percentage
 		);
-
-		if (isOverflowPercentage(totalPercentage))
-			throwOverflowException(occupiedPercentage);
 
 		const totalAmount = await this.incomeService.getTotal(userId);
 
@@ -84,19 +77,13 @@ export class AllocationService {
 		if (existing.userId !== userId)
 			throw new BadRequestException("Доступ запрещён!");
 
-		const occupiedPercentage = await calculateOccupiedPercentage(
-			this.prisma,
-			userId,
-			id
-		);
+		const occupiedPercentage =
+			await this.validationService.validateOccupiedPercentage(userId, id);
 
-		const totalPercentage = getSumPercentage(
+		this.validationService.validateTotalPercentage(
 			occupiedPercentage,
 			dto.percentage
 		);
-
-		if (isOverflowPercentage(totalPercentage))
-			throwOverflowException(occupiedPercentage);
 
 		const totalAmount = await this.incomeService.getTotal(userId);
 
@@ -131,7 +118,8 @@ export class AllocationService {
 	}
 
 	async getFreePercentage(userId: string): Promise<number> {
-		const occupied = await calculateOccupiedPercentage(this.prisma, userId);
+		const occupied =
+			await this.validationService.validateOccupiedPercentage(userId);
 		return 100 - occupied;
 	}
 
