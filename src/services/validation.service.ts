@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	forwardRef,
+	Inject,
+	Injectable,
+} from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { IncomeService } from "src/income/income.service";
 
@@ -6,6 +11,7 @@ import { IncomeService } from "src/income/income.service";
 export class ValidationService {
 	constructor(
 		private prisma: PrismaService,
+		@Inject(forwardRef(() => IncomeService))
 		private incomeService: IncomeService
 	) {}
 

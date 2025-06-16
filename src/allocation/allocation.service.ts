@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	forwardRef,
+	Inject,
+	Injectable,
+} from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { AllocationDto } from "./dto/allocation.dto";
 import { IncomeService } from "src/income/income.service";
@@ -10,6 +15,7 @@ import { calculateLocalPercentage } from "src/utils/percentage.utils";
 export class AllocationService {
 	constructor(
 		private prisma: PrismaService,
+		@Inject(forwardRef(() => IncomeService))
 		private incomeService: IncomeService,
 		private validationService: ValidationService
 	) {}
