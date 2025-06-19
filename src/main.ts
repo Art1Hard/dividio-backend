@@ -13,7 +13,11 @@ async function bootstrap() {
 	app.setGlobalPrefix("api");
 
 	app.enableCors({
-		origin: "http://localhost:5173", // или массив origins
+		origin: [
+			"http://localhost:5173",
+			"http://192.168.0.14:5173",
+			"http://172.19.0.1:5173",
+		], // или массив origins
 		credentials: true, // разрешаем передачу кук
 		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 		allowedHeaders: ["Content-Type", "Authorization"],
