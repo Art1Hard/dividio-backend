@@ -9,7 +9,7 @@ import {
 	ValidationPipe,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { AuthDto } from "./dto/auth.dto";
+import { AuthDto, AuthDtoWithCaptcha } from "./dto/auth.dto";
 import { Request, Response } from "express";
 
 @Controller("auth")
@@ -19,7 +19,7 @@ export class AuthController {
 	@Post("register")
 	@UsePipes(new ValidationPipe())
 	async register(
-		@Body() dto: AuthDto,
+		@Body() dto: AuthDtoWithCaptcha,
 		@Res({ passthrough: true }) res: Response
 	) {
 		const { refreshToken, ...response } = await this.authService.register(dto);

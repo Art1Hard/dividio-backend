@@ -1,4 +1,5 @@
-import { IsEmail, MinLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsEmail, IsString, MinLength, ValidateNested } from "class-validator";
 
 export class AuthDto {
 	@IsEmail()
@@ -6,4 +7,13 @@ export class AuthDto {
 
 	@MinLength(6)
 	password: string;
+}
+
+export class AuthDtoWithCaptcha {
+	@ValidateNested()
+	@Type(() => AuthDto)
+	user: AuthDto;
+
+	@IsString()
+	captchaToken: string;
 }

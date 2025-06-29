@@ -7,3 +7,10 @@ export interface RequestWithUser extends Request {
 		name: string | null;
 	};
 }
+
+export interface TurnstileResponse {
+	success: boolean;
+	challenge_ts: string; // timestamp of challenge
+	hostname: string;
+	"error-codes"?: string[];
+}
