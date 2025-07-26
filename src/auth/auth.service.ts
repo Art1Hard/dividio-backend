@@ -118,21 +118,26 @@ export class AuthService {
 	}
 
 	async verifyTurnstileToken(token: string, remoteip?: string) {
-		const res = await axios.post<TurnstileResponse>(
-			"https://challenges.cloudflare.com/turnstile/v0/siteverify",
-			new URLSearchParams({
-				secret:
-					this.configService.get<string>("TURNSTILE_SECRET") || "secretKey",
-				response: token,
-				...(remoteip ? { remoteip } : {}),
-			}),
-			{
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			}
-		);
+		try {
+			const res = await axios.post<TurnstileResponse>(
+				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+				new URLSearchParams({
+					secret:
+						this.configService.get<string>("TURNSTILE_SECRET") || "secretKey",
+					response: token,
+					...(remoteip ? { remoteip } : {}),
+				}),
+				{
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				}
+			);
 
-		if (res.data.success) console.log("Success tokenCaptcha!");
-
-		return res.data.success;
+			return res.data.success;
+		} catch (e: unknown) {
+			console.error("Something was wrong with verify Turnstile token! ", e);
+			throw new UnauthorizedException(
+				"Something was wrong... Please, try later"
+			);
+		}
 	}
 }
