@@ -9,6 +9,7 @@ export class UserService {
 	constructor(private prisma: PrismaService) {}
 
 	async getById(id: string): Promise<User | null> {
+		// await new Promise((res) => setTimeout(res, 1000));
 		return await this.prisma.user.findUnique({ where: { id } });
 	}
 
