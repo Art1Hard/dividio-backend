@@ -6,11 +6,13 @@ import {
 	Put,
 	Req,
 	UseGuards,
+	UsePipes,
+	ValidationPipe,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
 import { RequestWithUser } from "src/types/request";
-import { ChangeNameDto } from "./dto/user.dto";
+import { UserDto } from "./dto/user.dto";
 
 @Controller("user")
 export class UserController {
@@ -18,7 +20,7 @@ export class UserController {
 
 	@UseGuards(JwtAuthGuard)
 	@Get()
-	async getMe(@Req() req: RequestWithUser) {
+	async get(@Req() req: RequestWithUser) {
 		const data = await this.userService.getById(req.user.id);
 
 		if (!data) throw new BadRequestException("Error with get user");
@@ -30,8 +32,9 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard)
+	@UsePipes(new ValidationPipe())
 	@Put()
-	changeName(@Body() dto: ChangeNameDto, @Req() req: RequestWithUser) {
-		return this.userService.changeName(req.user.id, dto.name);
+	async update(@Body() dto: UserDto, @Req() req: RequestWithUser) {
+		return this.userService.update(req.user.id, dto);
 	}
 }
