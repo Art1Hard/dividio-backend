@@ -30,7 +30,8 @@ export class AuthService {
 			throw new BadRequestException("User with this email is already exist");
 
 		const isHuman = await this.verifyTurnstileToken(dto.captchaToken);
-		if (!isHuman) throw new UnauthorizedException("Вы не прошли рекапчу...");
+		if (!isHuman)
+			throw new UnauthorizedException("You didn't pass the recaptcha");
 
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { password, ...user } = await this.userService.create(dto.user);
@@ -117,7 +118,7 @@ export class AuthService {
 		);
 	}
 
-	async verifyTurnstileToken(token: string, remoteip?: string) {
+	private async verifyTurnstileToken(token: string, remoteip?: string) {
 		try {
 			const res = await axios.post<TurnstileResponse>(
 				"https://challenges.cloudflare.com/turnstile/v0/siteverify",

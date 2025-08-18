@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { AuthDto } from "src/auth/dto/auth.dto";
 import { PrismaService } from "src/services/prisma.service";
@@ -29,6 +29,12 @@ export class UserService {
 	}
 
 	async update(id: string, dto: UserDto) {
+		const userGetByEmail = await this.getByEmail(dto.email);
+		const userGetById = await this.getById(id);
+
+		if (userGetByEmail && userGetByEmail.email !== userGetById?.email)
+			throw new BadRequestException("This email is already taken");
+
 		let user = dto;
 		if (dto.password)
 			user = { ...user, password: await bcrypt.hash(dto.password, 10) };
