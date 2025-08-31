@@ -23,10 +23,7 @@ export class IncomeController {
 	@UseGuards(JwtAuthGuard)
 	@Get()
 	async getIncomes(@Req() req: RequestWithUser) {
-		const incomes = await this.incomeService.getMany(req.user.id);
-		const totalAmount = await this.incomeService.getTotal(req.user.id);
-
-		return { totalAmount, incomes };
+		return this.incomeService.getMany(req.user.id);
 	}
 
 	@UseGuards(JwtAuthGuard)

@@ -1,23 +1,17 @@
-import {
-	BadRequestException,
-	forwardRef,
-	Inject,
-	Injectable,
-} from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { AllocationDto } from "./dto/allocation.dto";
-import { IncomeService } from "src/income/income.service";
 import { ValidationService } from "src/services/validation.service";
 import { Allocation } from "@prisma/client";
 import { calculateLocalPercentage } from "src/utils/percentage.utils";
+import { StatisticService } from "src/statistic/statistic.service";
 
 @Injectable()
 export class AllocationService {
 	constructor(
 		private prisma: PrismaService,
-		@Inject(forwardRef(() => IncomeService))
-		private incomeService: IncomeService,
-		private validationService: ValidationService
+		private validationService: ValidationService,
+		private statisticService: StatisticService
 	) {}
 
 	async getMany(userId: string) {
@@ -32,7 +26,8 @@ export class AllocationService {
 			},
 		});
 
-		const totalAmount = await this.incomeService.getTotal(userId);
+		const totalAmount =
+			await this.statisticService.getTotalIncomesAmount(userId);
 
 		return allocations.map((allocation) => ({
 			...allocation,
@@ -48,7 +43,7 @@ export class AllocationService {
 
 	async create(dto: AllocationDto, userId: string) {
 		const occupiedPercentage =
-			await this.validationService.validateOccupiedPercentage(userId);
+			await this.statisticService.getOccupiedPercentage(userId);
 
 		await this.validationService.validateHasIncome(userId);
 
@@ -57,7 +52,8 @@ export class AllocationService {
 			dto.percentage
 		);
 
-		const totalAmount = await this.incomeService.getTotal(userId);
+		const totalAmount =
+			await this.statisticService.getTotalIncomesAmount(userId);
 
 		const data = await this.prisma.allocation.create({
 			data: {
@@ -84,14 +80,16 @@ export class AllocationService {
 			throw new BadRequestException("Доступ запрещён!");
 
 		const occupiedPercentage =
-			await this.validationService.validateOccupiedPercentage(userId, id);
+			(await this.statisticService.getOccupiedPercentage(userId)) -
+			existing.percentage;
 
 		this.validationService.validateTotalPercentage(
 			occupiedPercentage,
 			dto.percentage
 		);
 
-		const totalAmount = await this.incomeService.getTotal(userId);
+		const totalAmount =
+			await this.statisticService.getTotalIncomesAmount(userId);
 
 		const data = await this.prisma.allocation.update({
 			where: { id: id },
@@ -123,15 +121,7 @@ export class AllocationService {
 		});
 	}
 
-	async getFreePercentage(userId: string): Promise<number> {
-		const occupied =
-			await this.validationService.validateOccupiedPercentage(userId);
-		return 100 - occupied;
-	}
-
-	async getFreeAmount(userId: string): Promise<number> {
-		const totalAmount = await this.incomeService.getTotal(userId);
-		const freePercentage = await this.getFreePercentage(userId);
-		return Math.round((freePercentage / 100) * totalAmount);
+	async getCount(userId: string) {
+		return this.prisma.allocation.count({ where: { userId } });
 	}
 }

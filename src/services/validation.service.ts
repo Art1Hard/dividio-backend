@@ -1,42 +1,26 @@
 import {
 	BadRequestException,
-	forwardRef,
-	Inject,
+	HttpException,
+	HttpStatus,
 	Injectable,
 } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
-import { IncomeService } from "src/income/income.service";
+import { StatisticService } from "src/statistic/statistic.service";
 
 @Injectable()
 export class ValidationService {
 	constructor(
 		private prisma: PrismaService,
-		@Inject(forwardRef(() => IncomeService))
-		private incomeService: IncomeService
+		private statisticService: StatisticService
 	) {}
 
 	async validateHasIncome(userId: string): Promise<void> {
-		const totalIncome = await this.incomeService.getTotal(userId);
+		const totalIncome = await this.statisticService.getTotalIncomes(userId);
 		if (totalIncome === 0) {
 			throw new BadRequestException(
 				"Невозможно создать распределение без дохода"
 			);
 		}
-	}
-
-	async validateOccupiedPercentage(
-		userId: string,
-		excludeId?: string
-	): Promise<number> {
-		const where = excludeId ? { userId, NOT: { id: excludeId } } : { userId };
-
-		const { _sum } = await this.prisma.allocation.aggregate({
-			where,
-			_sum: {
-				percentage: true,
-			},
-		});
-		return _sum.percentage ?? 0;
 	}
 
 	validateTotalPercentage(
@@ -45,8 +29,17 @@ export class ValidationService {
 	): void {
 		const totalPercentage = occupiedPercentage + newPercentage;
 		if (totalPercentage > 100) {
-			throw new BadRequestException(
-				`Занято ${occupiedPercentage}% из 100%. Можно добавить не более ${100 - occupiedPercentage}%`
+			throw new HttpException(
+				{
+					code: "ALLOCATION_LIMIT_EXCEEDED",
+					message: "It takes too much space to add a new allocation",
+					details: {
+						used: occupiedPercentage,
+						limit: 100,
+						available: 100 - occupiedPercentage,
+					},
+				},
+				HttpStatus.BAD_REQUEST
 			);
 		}
 	}

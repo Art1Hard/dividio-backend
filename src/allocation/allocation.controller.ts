@@ -23,12 +23,7 @@ export class AllocationController {
 	@UseGuards(JwtAuthGuard)
 	@Get()
 	async getAllocation(@Req() req: RequestWithUser) {
-		const allocations = await this.allocationService.getMany(req.user.id);
-		const freePercentage = await this.allocationService.getFreePercentage(
-			req.user.id
-		);
-		const freeAmount = await this.allocationService.getFreeAmount(req.user.id);
-		return { freePercentage, freeAmount, allocations };
+		return this.allocationService.getMany(req.user.id);
 	}
 
 	@UseGuards(JwtAuthGuard)

@@ -1,9 +1,4 @@
-import {
-	BadRequestException,
-	forwardRef,
-	Inject,
-	Injectable,
-} from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { IncomeDto } from "./dto/income.dto";
 import { AllocationService } from "src/allocation/allocation.service";
@@ -12,7 +7,6 @@ import { AllocationService } from "src/allocation/allocation.service";
 export class IncomeService {
 	constructor(
 		private prisma: PrismaService,
-		@Inject(forwardRef(() => AllocationService))
 		private allocationService: AllocationService
 	) {}
 
@@ -60,10 +54,10 @@ export class IncomeService {
 		if (existing.userId !== userId)
 			throw new BadRequestException("Доступ запрещён!");
 
-		const allocations = await this.allocationService.getMany(userId);
-		const incomes = await this.getMany(userId);
+		const allocationCount = await this.allocationService.getCount(userId);
+		const incomeCount = await this.getCount(userId);
 
-		if (allocations.length > 0 && incomes.length <= 1) {
+		if (allocationCount > 0 && incomeCount <= 1) {
 			throw new BadRequestException(
 				"Невозможно удалить последний источник дохода, пока есть распределения!"
 			);
@@ -75,14 +69,7 @@ export class IncomeService {
 		});
 	}
 
-	async getTotal(userId: string) {
-		const result = await this.prisma.income.aggregate({
-			where: { userId },
-			_sum: {
-				amount: true,
-			},
-		});
-
-		return result._sum.amount ?? 0;
+	async getCount(userId: string) {
+		return this.prisma.income.count({ where: { userId } });
 	}
 }

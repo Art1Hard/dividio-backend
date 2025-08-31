@@ -32,4 +32,9 @@ export class StatisticService {
 
 		return 100 - occupied;
 	}
+
+	async getOccupiedPercentage(userId: string): Promise<number> {
+		const freePercentage = await this.getFreePercentage(userId);
+		return 100 - freePercentage;
+	}
 }
