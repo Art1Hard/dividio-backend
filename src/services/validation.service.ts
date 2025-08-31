@@ -4,15 +4,11 @@ import {
 	HttpStatus,
 	Injectable,
 } from "@nestjs/common";
-import { PrismaService } from "src/services/prisma.service";
 import { StatisticService } from "src/statistic/statistic.service";
 
 @Injectable()
 export class ValidationService {
-	constructor(
-		private prisma: PrismaService,
-		private statisticService: StatisticService
-	) {}
+	constructor(private statisticService: StatisticService) {}
 
 	async validateHasIncome(userId: string): Promise<void> {
 		const totalIncome = await this.statisticService.getTotalIncomes(userId);
@@ -43,4 +39,17 @@ export class ValidationService {
 			);
 		}
 	}
+
+	validateLastIncome = (allocationCount: number, incomeCount: number) => {
+		if (allocationCount > 0 && incomeCount <= 1) {
+			throw new HttpException(
+				{
+					code: "LAST_INCOME_VALIDATION_ERROR",
+					message:
+						"Cannot delete the last income source while allocations exist!",
+				},
+				HttpStatus.BAD_REQUEST
+			);
+		}
+	};
 }

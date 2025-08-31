@@ -2,12 +2,14 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { IncomeDto } from "./dto/income.dto";
 import { AllocationService } from "src/allocation/allocation.service";
+import { ValidationService } from "src/services/validation.service";
 
 @Injectable()
 export class IncomeService {
 	constructor(
 		private prisma: PrismaService,
-		private allocationService: AllocationService
+		private allocationService: AllocationService,
+		private validationService: ValidationService
 	) {}
 
 	async getMany(userId: string) {
@@ -56,6 +58,8 @@ export class IncomeService {
 
 		const allocationCount = await this.allocationService.getCount(userId);
 		const incomeCount = await this.getCount(userId);
+
+		this.validationService.validateLastIncome(allocationCount, incomeCount);
 
 		if (allocationCount > 0 && incomeCount <= 1) {
 			throw new BadRequestException(
