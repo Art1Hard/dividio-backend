@@ -22,7 +22,13 @@ export class AllocationService {
 				id: true,
 				title: true,
 				percentage: true,
-				color: true,
+				color: {
+					select: {
+						id: true,
+						name: true,
+						value: true,
+					},
+				},
 			},
 		});
 
@@ -60,9 +66,20 @@ export class AllocationService {
 				title: dto.title,
 				percentage: dto.percentage,
 				userId: userId,
-				color: dto.color,
+				colorId: dto.colorId,
 			},
-			select: { id: true, title: true, percentage: true, color: true },
+			select: {
+				id: true,
+				title: true,
+				percentage: true,
+				color: {
+					select: {
+						id: true,
+						name: true,
+						value: true,
+					},
+				},
+			},
 		});
 
 		return {
@@ -96,9 +113,20 @@ export class AllocationService {
 			data: {
 				title: dto.title,
 				percentage: dto.percentage,
-				color: dto.color,
+				colorId: dto.colorId,
 			},
-			select: { id: true, title: true, percentage: true, color: true },
+			select: {
+				id: true,
+				title: true,
+				percentage: true,
+				color: {
+					select: {
+						id: true,
+						name: true,
+						value: true,
+					},
+				},
+			},
 		});
 
 		return {

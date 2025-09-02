@@ -5,7 +5,8 @@ import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
 import { IncomeModule } from "./income/income.module";
 import { AllocationModule } from "./allocation/allocation.module";
-import { StatisticModule } from './statistic/statistic.module';
+import { StatisticModule } from "./statistic/statistic.module";
+import { AllocationColorModule } from "./allocation-color/allocation-color.module";
 
 @Module({
 	imports: [
@@ -17,6 +18,7 @@ import { StatisticModule } from './statistic/statistic.module';
 		IncomeModule,
 		AllocationModule,
 		StatisticModule,
+		AllocationColorModule,
 	],
 	controllers: [],
 	providers: [PrismaService],

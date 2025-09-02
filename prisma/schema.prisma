@@ -15,6 +15,7 @@ model User {
 
 	incomes     Income[]
 	allocations Allocation[]
+	colors      AllocationColor[]
 
 	@@map("user")
 }
@@ -34,10 +35,22 @@ model Allocation {
 	id 				 String  @id @default(cuid())
 	title  		 String
 	percentage Int
-	required 	 Boolean @default(false)
-	color 		 String  @default("gray-500")
-	user 			 User 	 @relation(fields: [userId], references: [id])
-	userId 		 String  @map("user_id")
+	required 	 Boolean 					@default(false)
+	color      AllocationColor @relation(fields: [colorId], references: [id])
+  colorId    String 					@map("color_id")
+	user 			 User 	 					@relation(fields: [userId], references: [id])
+	userId 		 String  					@map("user_id")
 
 	@@map("allocation")
+}
+
+model AllocationColor {
+  id     			String @id @default(cuid())
+  name   			String
+  value  			String
+  user   			User   @relation(fields: [userId], references: [id])
+  userId 			String @map("user_id")
+	allocations Allocation[]
+
+  @@map("allocation_color")
 }

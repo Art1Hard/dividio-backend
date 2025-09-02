@@ -11,7 +11,22 @@ export class UserService {
 
 	async getById(id: string): Promise<User | null> {
 		// await new Promise((res) => setTimeout(res, 1000));
-		return await this.prisma.user.findUnique({ where: { id } });
+		return await this.prisma.user.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				email: true,
+				name: true,
+				password: true,
+				colors: {
+					select: {
+						id: true,
+						name: true,
+						value: true,
+					},
+				},
+			},
+		});
 	}
 
 	async getByEmail(email: string) {
