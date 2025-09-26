@@ -5,6 +5,7 @@ import {
 	Get,
 	Param,
 	Post,
+	Put,
 	Req,
 	UseGuards,
 	UsePipes,
@@ -35,6 +36,13 @@ export class AllocationColorController {
 		@Req() req: RequestWithUser
 	) {
 		return this.allocationColorService.create(dto, req.user.id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@UsePipes(new ValidationPipe())
+	@Put(":id")
+	async editColor(@Param("id") id: string, @Body() dto: AllocationColorDto) {
+		return this.allocationColorService.update(id, dto);
 	}
 
 	@UseGuards(JwtAuthGuard)
