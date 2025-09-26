@@ -47,6 +47,12 @@ export class AllocationService {
 		});
 	}
 
+	async findFirstByColor(colorId: string, userId: string) {
+		return await this.prisma.allocation.findFirst({
+			where: { userId, colorId },
+		});
+	}
+
 	async create(dto: AllocationDto, userId: string) {
 		const occupiedPercentage =
 			await this.statisticService.getOccupiedPercentage(userId);

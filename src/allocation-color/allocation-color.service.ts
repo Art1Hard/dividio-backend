@@ -1,10 +1,19 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	HttpException,
+	HttpStatus,
+	Injectable,
+} from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { AllocationColorDto } from "./dto/allocation-color.dto";
+import { AllocationService } from "src/allocation/allocation.service";
 
 @Injectable()
 export class AllocationColorService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private allocationService: AllocationService
+	) {}
 
 	getMany(userId: string) {
 		return this.prisma.allocationColor.findMany({
@@ -43,6 +52,21 @@ export class AllocationColorService {
 
 	async delete(id: string, userId: string) {
 		const existing = await this.getUnique(id);
+
+		const firstAllocation = await this.allocationService.findFirstByColor(
+			id,
+			userId
+		);
+
+		if (firstAllocation)
+			throw new HttpException(
+				{
+					code: "COLOR_USED",
+					message:
+						"You can't delete this color because it is used in an allocation",
+				},
+				HttpStatus.BAD_REQUEST
+			);
 
 		if (!existing) throw new BadRequestException("Запись не найдена");
 
