@@ -28,7 +28,20 @@ export class AllocationColorService {
 		});
 	}
 
-	create(dto: AllocationColorDto, userId: string) {
+	async create(dto: AllocationColorDto, userId: string) {
+		const colorsCount = await this.prisma.allocationColor.count({
+			where: { userId },
+		});
+
+		if (colorsCount >= 10)
+			throw new HttpException(
+				{
+					code: "COLOR_MAX_COUNT",
+					message: "You can't create more than 10 colors",
+				},
+				HttpStatus.BAD_REQUEST
+			);
+
 		return this.prisma.allocationColor.create({
 			data: {
 				name: dto.name,
@@ -72,6 +85,19 @@ export class AllocationColorService {
 
 		if (existing.userId !== userId)
 			throw new BadRequestException("Доступ запрещён!");
+
+		const colorsCount = await this.prisma.allocationColor.count({
+			where: { userId },
+		});
+
+		if (colorsCount <= 3)
+			throw new HttpException(
+				{
+					code: "COLOR_MIN_COUNT",
+					message: "You can't delete more than 3 colors",
+				},
+				HttpStatus.BAD_REQUEST
+			);
 
 		return this.prisma.allocationColor.delete({
 			where: { id },

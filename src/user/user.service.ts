@@ -4,6 +4,7 @@ import { AuthDto } from "src/auth/dto/auth.dto";
 import { PrismaService } from "src/services/prisma.service";
 import * as bcrypt from "bcrypt";
 import { UserDto } from "./dto/user.dto";
+import { COLORS } from "src/constants/color.constants";
 
 @Injectable()
 export class UserService {
@@ -39,6 +40,9 @@ export class UserService {
 				email: dto.email,
 				name: "",
 				password: await bcrypt.hash(dto.password, 10),
+				colors: {
+					create: COLORS,
+				},
 			},
 		});
 	}
