@@ -1,9 +1,4 @@
-import {
-	BadRequestException,
-	HttpException,
-	HttpStatus,
-	Injectable,
-} from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { StatisticService } from "src/statistic/statistic.service";
 
 @Injectable()
@@ -13,8 +8,12 @@ export class ValidationService {
 	async validateHasIncome(userId: string): Promise<void> {
 		const totalIncome = await this.statisticService.getTotalIncomes(userId);
 		if (totalIncome === 0) {
-			throw new BadRequestException(
-				"Невозможно создать распределение без дохода"
+			throw new HttpException(
+				{
+					code: "ALLOCATION_WITHOUT_INCOME",
+					message: "Невозможно создать распределение без дохода",
+				},
+				HttpStatus.BAD_REQUEST
 			);
 		}
 	}
