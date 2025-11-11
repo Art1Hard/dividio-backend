@@ -10,7 +10,6 @@ export function getCookieOptions(
 		domain: configService.get<string>("DOMAIN"),
 		expires: expires ?? new Date(0),
 		secure: true,
-		//! lax if production
-		sameSite: "none",
+		sameSite: "lax",
 	};
 }
