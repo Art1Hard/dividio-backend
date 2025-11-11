@@ -18,6 +18,7 @@ async function bootstrap() {
 			"http://192.168.0.14:5173",
 			"http://172.19.0.1:5173",
 			"http://localhost:3000",
+			"https://dividio-frontend-next.onrender.com",
 		], // или массив origins
 		credentials: true, // разрешаем передачу кук
 		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
