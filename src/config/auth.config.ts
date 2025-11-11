@@ -7,9 +7,8 @@ export function getCookieOptions(
 ): CookieOptions {
 	return {
 		httpOnly: true,
-		domain: configService.get<string>("DOMAIN"),
 		expires: expires ?? new Date(0),
 		secure: true,
-		sameSite: "lax",
+		sameSite: "none",
 	};
 }
